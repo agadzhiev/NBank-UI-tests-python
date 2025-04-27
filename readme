@@ -1,0 +1,4 @@
+commands to run:
+
+cd /NBank-tests
+pytest 
