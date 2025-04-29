@@ -1,7 +1,8 @@
 import pytest
 import requests
 
-
+""" ПОКА ТОЛЬКО ДЖУН ВЕРСИЯ ДЛЯ ВАЛИАЦИОННЫХ ТЕСТОВ (НЕ БЕЙТЕ) """
+@pytest.mark.validation
 class TestValidation:
     @pytest.mark.parametrize(
         "username, password, role",
