@@ -1,4 +1,4 @@
-import os
+from typing import Any
 from pathlib import Path
 
 
@@ -9,9 +9,9 @@ class Config:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(Config, cls).__new__(cls)
-            config_path = Path(__file__).parent / 'config.properties'
+            config_path = Path(__file__).parents[4] / 'resources' / 'config.properties'
             if not config_path.exists():
-                raise RuntimeError("config.properties not found in resources")
+                raise RuntimeError(f"{config_path}: config.properties not found in resources")
             with open(config_path, 'r') as f:
                 for line in f:
                     if '=' in line:
@@ -20,9 +20,5 @@ class Config:
         return cls._instance
 
     @staticmethod
-    def get(key):
-        return Config()._properties.get(key)
-
-    @staticmethod
-    def get_or_default(key, default_value):
+    def get(key: str, default_value: Any = None) -> Any:
         return Config()._properties.get(key, default_value)

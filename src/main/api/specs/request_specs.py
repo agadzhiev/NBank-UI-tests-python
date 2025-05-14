@@ -1,15 +1,7 @@
-import os
 import requests
 import logging
+from src.main.api.configs.config import Config
 
-logging.basicConfig(level=logging.INFO)
-
-class Config:
-    @staticmethod
-    def get(key, default=None):
-        return os.getenv(key, default) or {
-            "backendUrl": "http://localhost:4111/api/v1"
-        }.get(key)
 
 class RequestSpecs:
     @staticmethod
