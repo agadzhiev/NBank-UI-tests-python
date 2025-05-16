@@ -12,6 +12,13 @@ Authorization: Basic YWRtaW46YWRtaW4=
 
 {}
 
+### Delete user
+DELETE http://localhost:4111/api/v1/admin/users/130
+Accept: application/json
+Authorization: Basic YWRtaW46YWRtaW4=
+
+{}
+
 
 ### Create user 1
 POST http://localhost:4111/api/v1/admin/users

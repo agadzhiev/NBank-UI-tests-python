@@ -1,13 +1,9 @@
+from typing import Annotated
 from src.main.api.models.base_model import BaseModel
-from src.main.api.models.user_role import UserRole
+from src.main.api.generators.generating_rule import GeneratingRule
 
 
 class CreateUserRequest(BaseModel):
-    username: str
-    password: str
-    role: UserRole
-
-    def model_dump(self, *args, **kwargs):
-        data = super().model_dump(*args, **kwargs)
-        data['role'] = self.role.value
-        return data
+    username: Annotated[str, GeneratingRule(regex=r"^[A-Za-z0-9]{3,15}$")]
+    password: Annotated[str, GeneratingRule(regex=r"^[A-Z]{3}[a-z]{4}[0-9]{3}[$%&]{2}$")]
+    role: Annotated[str, GeneratingRule(regex=r"^USER$")]

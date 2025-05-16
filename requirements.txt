@@ -2,3 +2,5 @@ pytest
 requests
 pydantic
 softest
+rstr
+httpx

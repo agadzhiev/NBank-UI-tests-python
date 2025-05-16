@@ -1,19 +1,9 @@
 import pytest
 import softest
-import logging
-import http.client as http_client
 
-
-@pytest.fixture(scope="session", autouse=True)
-def enable_http_logging():
-    http_client.HTTPConnection.debuglevel = 1
-
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.DEBUG)
-
-    requests_log = logging.getLogger("urllib3")
-    requests_log.setLevel(logging.DEBUG)
-    requests_log.propagate = True
+from src.fixtures.object_fixtures import *
+from src.fixtures.user_fixtures import *
+from src.fixtures.api_fixtures import *
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)

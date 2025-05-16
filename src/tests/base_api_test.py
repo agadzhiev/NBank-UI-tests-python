@@ -1,5 +1,7 @@
 import softest
 
 
-class BaseTest(softest.TestCase):
-    ...
+class BaseTestWithoutSoftAsserts: ...
+
+
+class BaseTest(softest.TestCase, BaseTestWithoutSoftAsserts): ...
