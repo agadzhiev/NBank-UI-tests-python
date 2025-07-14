@@ -27,7 +27,7 @@ class TestCreateAccount:
         assert create_user_response.role == create_user_request.role
 
         create_account_response = CreateAccountRequester(
-            RequestSpecs.user_auth_spec(create_user_request.username, create_user_request.password),
+            RequestSpecs.auth_as_user(create_user_request.username, create_user_request.password),
             ResponseSpecs.entity_was_created()
         ).post()
 
