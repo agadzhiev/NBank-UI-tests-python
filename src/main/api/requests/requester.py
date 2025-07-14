@@ -1,17 +1,14 @@
-import abc
-from typing import Callable, Dict
+from typing import Dict, Callable
+from abc import ABC, abstractmethod
+
+from src.main.api.models.base_model import BaseModel
 
 
-class Requester(abc.ABC):
-    def __init__(
-            self, 
-            request_spec: Dict[str, str], 
-            response_spec: Callable, 
-    ):
+class Requester(ABC):
+    def __init__(self, request_spec: Dict[str, str], response_spec: Callable):
         self.headers = request_spec.get('headers')
-        self.base_url = request_spec.get('base_url', 'http://localhost:4111')
+        self.base_url = request_spec.get('base_url', 'http://localhost:4111/api/v1')
         self.response_spec = response_spec
 
-    @abc.abstractmethod
-    def post(self, model):
-        pass
+    @abstractmethod
+    def post(self, model: BaseModel): ...

@@ -1,6 +1,4 @@
-import abc
-from pydantic import BaseModel as PydanticBaseModel
+from pydantic import BaseModel as BM
 
 
-class BaseModel(abc.ABC, PydanticBaseModel):
-    ...
+class BaseModel(BM): ...
