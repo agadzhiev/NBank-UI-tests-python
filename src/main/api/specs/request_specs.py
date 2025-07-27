@@ -24,7 +24,7 @@ class RequestSpecs:
 
     @staticmethod
     def unauth_spec() -> Dict[str, str]:
-        return RequestSpecs._default_headers()
+        return RequestSpecs.default_req_headers()
 
     @staticmethod
     def admin_auth_spec():

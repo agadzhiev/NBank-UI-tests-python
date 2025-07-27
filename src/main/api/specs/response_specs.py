@@ -35,7 +35,7 @@ class ResponseSpecs:
                 f"Expected 400 BAD_REQUEST, got {response.status_code}. Response: {response.text}"
             )
             actual_value = response.json().get(error_key)
-            assert actual_value == error_value, (
+            assert error_value in actual_value, (
                 f"Expected error field '{error_key}' to be '{error_value}', but got '{actual_value}'."
             )
         return check

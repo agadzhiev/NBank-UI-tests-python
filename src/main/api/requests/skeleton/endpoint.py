@@ -23,7 +23,7 @@ class Endpoint(Enum):
         response_model=CreateUserResponse,
     )
 
-    LOGIN = EndpointConfig(
+    LOGIN_USER = EndpointConfig(
         url="/auth/login",
         request_model=LoginUserRequest,
         response_model=LoginUserResponse,

@@ -21,7 +21,7 @@ class UserSteps(BaseSteps):
     def login(self, user_request: CreateUserRequest):
         response = CrudRequester(
             RequestSpecs.unauth_spec(),
-            Endpoint.LOGIN,
+            Endpoint.LOGIN_USER,
             ResponseSpecs.request_returns_ok()
         ).post(LoginUserRequest(
             username=user_request.username,
