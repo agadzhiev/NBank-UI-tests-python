@@ -1,13 +1,11 @@
 import pytest
 
-from src.main.api.models.create_user_request import CreateUserRequest
 from src.main.api.classes.api_manager import ApiManager
-from src.tests.base_api_test import BaseTestWithoutSoftAsserts
+from src.main.api.models.create_user_request import CreateUserRequest
 
 
-@pytest.mark.test
-class TestCreateAccount(BaseTestWithoutSoftAsserts):
-
-    @pytest.mark.usefixtures('user_request')
-    def test_user_can_create_account(self, api_manager: ApiManager, user_request: CreateUserRequest):
+@pytest.mark.api
+class TestCreateAccount:
+    @pytest.mark.usefixtures('user_request', 'api_manager')
+    def test_create_account(self, api_manager: ApiManager, user_request: CreateUserRequest):
         api_manager.user_steps.create_account(user_request)
