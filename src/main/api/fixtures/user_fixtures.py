@@ -8,3 +8,8 @@ from src.main.api.models.create_user_request import CreateUserRequest
 @pytest.fixture
 def user_request(api_manager: ApiManager):
     return api_manager.admin_steps.create_user()
+
+
+@pytest.fixture
+def admin_user_request(api_manager: ApiManager):
+    return api_manager.admin_steps.create_user()
