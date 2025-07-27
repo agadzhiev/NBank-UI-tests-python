@@ -1,20 +1,15 @@
-from typing import TypeVar, Type, Optional, Generic, Dict, Callable
+from typing import Optional, TypeVar
 
-from src.main.api.models.base_model import BaseModel
-from src.main.api.requests.skeleton.endpoint import Endpoint
-from src.main.api.requests.skeleton.http_request import HttpRequest
 from src.main.api.requests.skeleton.requesters.crud_requester import CrudRequester
+from src.main.api.models.base_model import BaseModel
+from src.main.api.requests.skeleton.http_request import HttpRequest
 
 
-T = TypeVar("T", bound=BaseModel)
+T = TypeVar('T', bound=BaseModel)
 
-class ValidatedCrudRequester(HttpRequest, Generic[T]):
-    def __init__(
-        self,
-        request_spec: Dict[str, str],
-        endpoint: Endpoint,
-        response_spec: Callable
-    ):
+
+class ValidatedCrudRequester(HttpRequest):
+    def __init__(self, request_spec, endpoint, response_spec):
         super().__init__(request_spec, endpoint, response_spec)
         self.crud_requester = CrudRequester(
             request_spec=request_spec,
@@ -22,13 +17,10 @@ class ValidatedCrudRequester(HttpRequest, Generic[T]):
             response_spec=response_spec
         )
 
-    def post(self, model: BaseModel) -> T:
+    def post(self, model: Optional[T] = None):
         response = self.crud_requester.post(model)
-        model_class: Type[T] = self.endpoint.response_model
-        return model_class.model_validate(response.json())
-
-    def get(self, id: int) -> Optional[T]: ...
-
-    def update(self, id: int, model: BaseModel) -> Optional[T]: ...
-
-    def delete(self, id: int) -> bool: ...
+        return self.endpoint.value.response_model.model_validate(response.json())
+    
+    def get(self, id: int): ...
+    def update(self, id: int): ...
+    def delete(self, id: int): ...

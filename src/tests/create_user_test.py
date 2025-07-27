@@ -14,12 +14,12 @@ class TestCreateUser:
         api_manager.admin_steps.create_user(create_user_request)
     
     @pytest.mark.parametrize(
-        'username, password, role, error_key, error_value',
-        [
-            ("   ", "Password33$", "USER", "username", "Username cannot be blank"),
-            ("ab", "Password33$", "USER", "username", "Username must be between 3 and 15 characters"),
-            ("abc$", "Password33$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"),
-            ("abc%", "Password33$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"),
+        argnames='username, password, role, error_key, error_value',
+        argvalues=[
+            ('', RandomData.get_password(), 'USER', 'username', 'Username cannot be blank'),
+            ('ab', RandomData.get_password(), 'USER', 'username', 'Username must be between 3 and 15 characters'),
+            ('qwertyuiopqwerty', RandomData.get_password(), 'USER', 'username', 'Username must be between 3 and 15 characters'),
+            ('@john_doe', RandomData.get_password(), 'USER', 'username', 'Username must contain only letters, digits, dashes, underscores, and dots'),
         ]
     )
     @pytest.mark.usefixtures('api_manager')

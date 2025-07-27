@@ -1,5 +1,6 @@
+import logging
+from typing import Any, List
 import pytest
-from typing import List, Any
 
 from src.main.api.models.create_user_response import CreateUserResponse
 from src.main.api.classes.api_manager import ApiManager
@@ -14,7 +15,9 @@ def created_objects():
 
 
 def cleanup_objects(objects: List[Any]):
-    api = ApiManager(objects)
+    api_manager = ApiManager(objects)
     for obj in objects:
         if isinstance(obj, CreateUserResponse):
-            api.admin_steps.delete_user(obj.id)
+            api_manager.admin_steps.delete_user(obj.id)
+        else:
+            logging.warning(f'Object type: {type(obj)} is not deleted')

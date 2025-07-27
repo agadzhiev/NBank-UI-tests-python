@@ -1,9 +1,10 @@
-from typing import get_type_hints, get_args, get_origin, Annotated, Any
-from src.main.api.generators.generating_rule import GeneratingRule
-import rstr
-import uuid
-import random
 from datetime import datetime, timedelta
+import uuid
+import rstr
+import random
+from typing import Any, Annotated, get_type_hints, get_origin, get_args
+
+from src.main.api.generators.generating_rule import GeneratingRule
 
 
 class RandomModelGenerator:
@@ -21,14 +22,13 @@ class RandomModelGenerator:
                 for ann in annotations:
                     if isinstance(ann, GeneratingRule):
                         rule = ann
-
             if rule:
                 value = RandomModelGenerator._generate_from_regex(rule.regex, actual_type)
             else:
                 value = RandomModelGenerator._generate_value(actual_type)
 
             init_data[field_name] = value
-
+        
         return cls(**init_data)
 
     @staticmethod
@@ -36,11 +36,10 @@ class RandomModelGenerator:
         generated = rstr.xeger(regex)
         if field_type is int:
             return int(generated)
-        elif field_type is float:
+        if field_type is float:
             return float(generated)
-        else:
-            return generated
-
+        return generated
+    
     @staticmethod
     def _generate_value(field_type: type) -> Any:
         if field_type is str:
@@ -53,16 +52,8 @@ class RandomModelGenerator:
             return random.choice([True, False])
         elif field_type is datetime:
             return datetime.now() - timedelta(seconds=random.randint(0, 100000))
-        elif get_origin(field_type) is list:
-            return RandomModelGenerator._generate_list(field_type)
+        elif field_type is list:
+            return [str(uuid.uuid4())[:5] for _ in random.randint(3, 10)]
         elif isinstance(field_type, type):
             return RandomModelGenerator.generate(field_type)
-        else:
-            return None
-
-    @staticmethod
-    def _generate_list(field_type: Any) -> list:
-        args = get_args(field_type)
-        if args and args[0] == str:
-            return [str(uuid.uuid4())[:5] for _ in range(2)]
-        return []
+        return

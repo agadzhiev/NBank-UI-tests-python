@@ -1,55 +1,41 @@
-from typing import Any, Dict, List
+from typing import Dict, Any, List
+from dataclasses import dataclass
 
 
+@dataclass
 class Mismatch:
-    def __init__(self, field_name: str, expected: Any, actual: Any):
-        self.field_name = field_name
-        self.expected = expected
-        self.actual = actual
-
-    def __str__(self) -> str:
-        return f"{self.field_name}: expected={self.expected}, actual={self.actual}"
+    field_name: str
+    expected: Any
+    actual: Any
 
 
 class ComparisonResult:
     def __init__(self, mismatches: List[Mismatch]):
-        self.mismatches = mismatches
+        self._mismatches = mismatches
 
     def is_success(self) -> bool:
         return not self.mismatches
-
-    def get_mismatches(self) -> List[Mismatch]:
-        return self.mismatches
-
-    def __str__(self) -> str:
-        if self.is_success():
-            return "All fields match."
-        return "Mismatched fields:\n" + "\n".join(f"- {m}" for m in self.mismatches)
-
+    
+    @property
+    def mismatches(self) -> List[Mismatch]:
+        return self._mismatches 
+    
 
 class ModelComparator:
     @staticmethod
-    def compare_fields(
-        request: Any,
-        response: Any,
-        field_mappings: Dict[str, str]
-    ) -> ComparisonResult:
+    def compare_fields(request: Any, response: Any, field_mapping: Dict[str, str]):
+        mismatches = []
 
-        mismatches: List[Mismatch] = []
+        for request_field, response_field in field_mapping.items():
+            request_value = ModelComparator._get_field_value(request, request_field)
+            response_value = ModelComparator._get_field_value(response, response_field)
 
-        for request_field, response_field in field_mappings.items():
-            value1 = ModelComparator._get_field_value(request, request_field)
-            value2 = ModelComparator._get_field_value(response, response_field)
-
-            if str(value1) != str(value2):
-                mismatches.append(
-                    Mismatch(f"{request_field} -> {response_field}", value1, value2)
-                )
-
+            if str(request_value) != str(response_value):
+                mismatches.append(Mismatch(f'{request_field} -> {response_field}', request_value, response_value))
+        
         return ComparisonResult(mismatches)
 
-    @staticmethod
-    def _get_field_value(obj: Any, field_name: str) -> Any:
+    def _get_field_value(obj: Any, field_name: str):
         current_class = obj.__class__
 
         while current_class:
@@ -57,6 +43,4 @@ class ModelComparator:
                 return getattr(obj, field_name)
             current_class = current_class.__base__
 
-        raise AttributeError(
-            f"Field '{field_name}' not found in class {obj.__class__.__name__}"
-        )
+        raise AttributeError(f'Field {field_name} not found in class {obj.__class__.__name__}')

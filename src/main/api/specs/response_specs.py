@@ -1,3 +1,4 @@
+from typing import Callable
 from http import HTTPStatus
 from typing import Callable
 from requests import Response

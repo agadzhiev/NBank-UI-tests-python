@@ -1,6 +1,6 @@
-class GeneratingRule:
-    def __init__(self, regex: str):
-        self.regex = regex
+from dataclasses import dataclass
 
-    def __repr__(self):
-        return f"GeneratingRule(regex={self.regex})"
+
+@dataclass
+class GeneratingRule:
+    regex: str
