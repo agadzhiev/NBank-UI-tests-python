@@ -1,20 +1,15 @@
 import requests
 import logging
-
-from src.main.models.login_user_request import LoginUserRequest
 from typing import Dict
 
 from src.main.configs.config import Config
+from src.main.models.login_user_request import LoginUserRequest
 from src.main.requests.skeleton.requesters.crud_requester import CrudRequester
 from src.main.requests.skeleton.endpoint import Endpoint
 from src.main.specs.response_specs import ResponseSpecs
 
 
 class RequestSpecs:
-    @staticmethod
-    def _base_url() -> str:
-        return f"{Config.get('server')}{Config.get('apiVersion')}"
-
     @staticmethod
     def default_req_headers() -> Dict[str, str]:
         return {
