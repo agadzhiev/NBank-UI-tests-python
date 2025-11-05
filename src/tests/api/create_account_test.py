@@ -1,7 +1,7 @@
 import pytest
 
-from src.main.classes.api_manager import ApiManager
-from src.main.models.create_user_request import CreateUserRequest
+from src.main.api.classes.api_manager import ApiManager
+from src.main.api.models.create_user_request import CreateUserRequest
 
 
 @pytest.mark.api
