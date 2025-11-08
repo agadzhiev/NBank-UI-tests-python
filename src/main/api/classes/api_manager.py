@@ -1,5 +1,5 @@
-from src.main.api.steps.admin_steps import AdminSteps
-from src.main.api.steps.user_steps import UserSteps
+from src.main.api.requests.steps.admin_steps import AdminSteps
+from src.main.api.requests.steps.user_steps import UserSteps
 
 
 class ApiManager:

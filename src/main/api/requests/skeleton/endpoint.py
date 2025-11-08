@@ -3,6 +3,7 @@ from enum import Enum
 from typing import List
 
 from src.main.api.models.create_account_response import CreateAccountResponse
+from src.main.api.models.user_profile_response import UserProfileResponse
 from src.main.api.models.create_user_request import CreateUserRequest
 from src.main.api.models.create_user_response import CreateUserResponse
 from src.main.api.models.login_user_request import LoginUserRequest
@@ -33,7 +34,7 @@ class Endpoint(Enum):
     ADMIN_GET_ALL_USERS = EndpointConfig(
         url='/admin/users',
         request_model=None,
-        response_model=List[CreateUserRequest]
+        response_model=List[CreateUserResponse]
     )
     
     LOGIN_USER = EndpointConfig(
@@ -52,4 +53,10 @@ class Endpoint(Enum):
         url='/customer/accounts',
         request_model=None,
         response_model=List[CreateAccountResponse]
+    )
+    
+    GET_CUSTOMER_PROFILE = EndpointConfig(
+        url='/customer/profile',
+        request_model=None,
+        response_model=UserProfileResponse
     )

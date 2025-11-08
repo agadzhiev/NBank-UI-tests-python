@@ -1,4 +1,8 @@
+from typing import List
+from playwright.sync_api import Locator
+
 from src.main.ui.pages.base_page import BasePage
+from src.main.ui.elements.user_badge import UserBadge
 
 
 class AdminPanel(BasePage):
@@ -19,5 +23,9 @@ class AdminPanel(BasePage):
         self.add_user_button.click()
         return self
     
-    def get_all_users(self):
+    def get_all_users(self) -> List[UserBadge]:
+        elements_collection = self.page.locator(".card.shadow-custom:has(:has-text('All Users')) li")
+        return self._generate_page_elements(elements_collection, UserBadge)
+    
+    def get_all_users_locator(self) -> Locator:
         return self.page.locator(".card.shadow-custom:has(:has-text('All Users')) li")
