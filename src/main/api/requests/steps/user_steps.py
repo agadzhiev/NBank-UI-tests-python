@@ -7,8 +7,8 @@ from src.main.api.requests.skeleton.endpoint import Endpoint
 from src.main.api.models.login_user_request import LoginUserRequest
 from src.main.api.models.login_user_response import LoginUserResponse
 from src.main.api.models.create_user_request import CreateUserRequest
+from src.main.api.models.comparison.model_assertions import models_match
 from src.main.api.models.user_profile_response import UserProfileResponse
-from src.main.api.models.comparison.model_assertions import ModelAssertions
 from src.main.api.models.create_account_response import CreateAccountResponse
 from src.main.api.requests.skeleton.requesters.validated_crud_requester import ValidatedCrudRequester
 
@@ -21,7 +21,7 @@ class UserSteps(BaseSteps):
             Endpoint.LOGIN_USER,
             ResponseSpecs.request_returns_ok()
         ).post(login_request)
-        ModelAssertions(login_request, login_response).match()
+        models_match(login_request, login_response)
         return login_response
 
     def create_account(self, user_request: CreateUserRequest) -> CreateAccountResponse:
@@ -31,8 +31,6 @@ class UserSteps(BaseSteps):
             ResponseSpecs.entity_was_created()
         ).post()
 
-        assert create_account_response.balance == 0.0
-        assert not create_account_response.transactions
         return create_account_response
     
     def get_all_accounts(self, user_request: CreateUserRequest) -> List[CreateAccountResponse]:

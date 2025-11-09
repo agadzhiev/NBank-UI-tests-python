@@ -1,7 +1,6 @@
 import pytest
 from playwright.sync_api import Page, expect
 
-from src.tests.ui.base_test import BaseUITest
 from src.main.ui.pages.bank_alert import BankAlert
 from src.main.api.classes.api_manager import ApiManager
 from src.main.ui.pages.user_dashboard import UserDashboard
@@ -9,7 +8,7 @@ from src.main.api.models.create_user_request import CreateUserRequest
 
 
 @pytest.mark.ui
-class TestCreateAccount(BaseUITest):
+class TestCreateAccount:
     @pytest.mark.user_session(1)
     @pytest.mark.usefixtures("user_request", "api_manager")
     def test_user_can_create_account(self, page: Page, api_manager: ApiManager, user_request: CreateUserRequest):

@@ -6,7 +6,7 @@ from src.main.api.requests.skeleton.endpoint import Endpoint
 from src.main.api.requests.steps.base_steps import BaseSteps
 from src.main.api.models.create_user_request import CreateUserRequest
 from src.main.api.models.create_user_response import CreateUserResponse
-from src.main.api.models.comparison.model_assertions import ModelAssertions
+from src.main.api.models.comparison.model_assertions import models_match
 from src.main.api.requests.skeleton.requesters.crud_requester import CrudRequester
 from src.main.api.requests.skeleton.requesters.validated_crud_requester import ValidatedCrudRequester
 
@@ -18,7 +18,7 @@ class AdminSteps(BaseSteps):
             Endpoint.ADMIN_CREATE_USER,
             ResponseSpecs.entity_was_created()
         ).post(user_request)
-        ModelAssertions(user_request, create_user_response).match()
+        models_match(user_request, create_user_response)
         self.created_objects.append(create_user_response)
 
         return create_user_response
@@ -43,4 +43,5 @@ class AdminSteps(BaseSteps):
             Endpoint.ADMIN_GET_ALL_USERS,
             ResponseSpecs.request_returns_ok()
         ).get()
+        
         return response
