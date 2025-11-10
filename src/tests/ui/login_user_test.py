@@ -8,7 +8,7 @@ from src.main.api.models.create_user_request import CreateUserRequest
 
 
 @pytest.mark.ui
-@pytest.mark.browsers("firefox")
+@pytest.mark.browsers("webkit")
 class TestLoginUser:
     def test_admin_can_login_with_correct_data(self, page: Page, admin_user_request: CreateUserRequest):
         admin_page = LoginPage(page).open()\
