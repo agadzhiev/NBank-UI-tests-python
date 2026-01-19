@@ -6,13 +6,21 @@ from src.main.api.generators.random_data import RandomData
 from src.main.api.models.alert_messages import AlertMessages
 from src.main.api.models.create_user_request import CreateUserRequest
 from src.main.api.generators.random_model_generator import RandomModelGenerator
+from src.main.api.models.comparison.model_assertions import ModelAssertions
 
 
 @pytest.mark.api
 class TestCreateUser:
     @pytest.mark.parametrize('create_user_request', [RandomModelGenerator.generate(CreateUserRequest)])
     def test_create_valid_user(self, api_manager: ApiManager, create_user_request: CreateUserRequest):
-        api_manager.admin_steps.create_user(create_user_request)
+        all_users_before = api_manager.admin_steps.get_all_users()
+        created_user = api_manager.admin_steps.create_user(create_user_request)
+        all_users_after = api_manager.admin_steps.get_all_users()
+        get_user = next((u for u in all_users_after if u.username == created_user.username), None)
+
+        assert len(all_users_after) == len(all_users_before) + 1
+        ModelAssertions(get_user, created_user).match()
+
     
     @pytest.mark.parametrize(
         'username, password, role, error_key, error_value',
@@ -24,6 +32,11 @@ class TestCreateUser:
         ]
     )
     def test_create_invalid_user(self, api_manager: ApiManager, username: str, password: str, role: str, error_key: str, error_value: str):
+        all_users_before = api_manager.admin_steps.get_all_users()
         create_user_request = CreateUserRequest(username=username, password=password, role=role)
         api_manager.admin_steps.create_invalid_user(create_user_request, error_key, error_value)
-    
+        all_users_after = api_manager.admin_steps.get_all_users()
+        get_user = next((u for u in all_users_after if u.username == created_user.username), None)
+
+        assert len(all_users_after) == len(all_users_before)
+        assert get_user is None
