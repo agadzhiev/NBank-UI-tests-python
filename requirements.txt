@@ -5,3 +5,4 @@ softest
 rstr
 pytest-playwright
 pytest-xdist
+psycopg[binary]
