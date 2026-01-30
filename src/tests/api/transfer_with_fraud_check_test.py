@@ -1,8 +1,12 @@
+import random
+
 import allure
 import pytest
 
 from src.main.api.classes.api_manager import ApiManager
 from src.main.api.fixtures.prepare_data_fixtures import PreparedUserAccount
+from src.main.api.models.comparison.model_assertions import ModelAssertions
+from src.main.api.models.transfer_request import TransferRequest
 from src.main.api.models.transfer_response import TransferResponse
 
 
@@ -49,12 +53,15 @@ class TestTransferWithFraudCheck:
             receiver = prepared_user_accounts[1]
 
         with allure.step("Transfer with fraud check"):
-            transfer_amount = 10.0
+            transfer_amount = round(random.uniform(0.1, 4999.9), 2)
+            transfer_request = TransferRequest(
+                senderAccountId=sender.account.id,
+                receiverAccountId=receiver.account.id,
+                amount=transfer_amount,
+            )
             transfer_response = api_manager.user_steps.transfer_with_fraud_check(
                 sender.user,
-                sender.account.id,
-                receiver.account.id,
-                transfer_amount,
+                transfer_request,
             )
 
         with allure.step("Validate transfer response matches mocked fraud decision"):
@@ -64,5 +71,5 @@ class TestTransferWithFraudCheck:
                 receiverAccountId=receiver.account.id,
                 **TRANSFER_APPROVED_EXPECTED,
             )
-            assert transfer_response.model_dump() == expected.model_dump()
+            ModelAssertions(expected, transfer_response).match()
 

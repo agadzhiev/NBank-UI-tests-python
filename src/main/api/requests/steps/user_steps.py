@@ -67,15 +67,8 @@ class UserSteps(BaseSteps):
     def transfer_with_fraud_check(
         self,
         user_request: CreateUserRequest,
-        sender_account_id: int,
-        receiver_account_id: int,
-        amount: float
+        transfer_request: TransferRequest,
     ) -> TransferResponse:
-        transfer_request = TransferRequest(
-            senderAccountId=sender_account_id,
-            receiverAccountId=receiver_account_id,
-            amount=amount
-        )
         transfer_response: TransferResponse = ValidatedCrudRequester(
             RequestSpecs.auth_as_user(user_request.username, user_request.password),
             Endpoint.TRANSFER_WITH_FRAUD_CHECK,
