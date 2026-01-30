@@ -10,6 +10,10 @@ from src.main.api.models.create_user_request import CreateUserRequest
 from src.main.api.models.comparison.model_assertions import models_match
 from src.main.api.models.user_profile_response import UserProfileResponse
 from src.main.api.models.create_account_response import CreateAccountResponse
+from src.main.api.models.deposit_request import DepositRequest
+from src.main.api.models.deposit_response import DepositResponse
+from src.main.api.models.transfer_request import TransferRequest
+from src.main.api.models.transfer_response import TransferResponse
 from src.main.api.requests.skeleton.requesters.validated_crud_requester import ValidatedCrudRequester
 
 
@@ -50,3 +54,31 @@ class UserSteps(BaseSteps):
         ).get()
 
         return user_profile
+
+    def deposit_to_account(self, user_request: CreateUserRequest, account_id: int, amount: float) -> DepositResponse:
+        deposit_request = DepositRequest(accountId=account_id, amount=amount)
+        deposit_response: DepositResponse = ValidatedCrudRequester(
+            RequestSpecs.auth_as_user(user_request.username, user_request.password),
+            Endpoint.DEPOSIT_TO_ACCOUNT,
+            ResponseSpecs.request_returns_ok()
+        ).post(deposit_request)
+        return deposit_response
+
+    def transfer_with_fraud_check(
+        self,
+        user_request: CreateUserRequest,
+        sender_account_id: int,
+        receiver_account_id: int,
+        amount: float
+    ) -> TransferResponse:
+        transfer_request = TransferRequest(
+            senderAccountId=sender_account_id,
+            receiverAccountId=receiver_account_id,
+            amount=amount
+        )
+        transfer_response: TransferResponse = ValidatedCrudRequester(
+            RequestSpecs.auth_as_user(user_request.username, user_request.password),
+            Endpoint.TRANSFER_WITH_FRAUD_CHECK,
+            ResponseSpecs.request_returns_ok()
+        ).post(transfer_request)
+        return transfer_response

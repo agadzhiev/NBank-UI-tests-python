@@ -7,7 +7,9 @@ import pytest
 from src.main.api.classes.session_storage import SessionStorage
 from src.main.api.fixtures.api_fixtures import *
 from src.main.api.fixtures.assertion_fixtures import *
+from src.main.api.fixtures.fraud_fixtures import *
 from src.main.api.fixtures.object_fixtures import *
+from src.main.api.fixtures.prepare_data_fixtures import *
 from src.main.api.fixtures.setup_hook import *
 from src.main.api.fixtures.user_fixtures import *
 from src.main.api.utils.normalize_browsers import norm_browser_name

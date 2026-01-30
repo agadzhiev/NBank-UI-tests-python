@@ -9,6 +9,10 @@ from src.main.api.models.create_user_response import CreateUserResponse
 from src.main.api.models.login_user_request import LoginUserRequest
 from src.main.api.models.login_user_response import LoginUserResponse
 from src.main.api.models.base_model import BaseModel
+from src.main.api.models.deposit_request import DepositRequest
+from src.main.api.models.deposit_response import DepositResponse
+from src.main.api.models.transfer_request import TransferRequest
+from src.main.api.models.transfer_response import TransferResponse
 
 
 @dataclass(frozen=True)
@@ -59,4 +63,16 @@ class Endpoint(Enum):
         url='/customer/profile',
         request_model=None,
         response_model=UserProfileResponse
+    )
+
+    DEPOSIT_TO_ACCOUNT = EndpointConfig(
+        url='/accounts/deposit',
+        request_model=DepositRequest,
+        response_model=DepositResponse
+    )
+
+    TRANSFER_WITH_FRAUD_CHECK = EndpointConfig(
+        url='/accounts/transfer-with-fraud-check',
+        request_model=TransferRequest,
+        response_model=TransferResponse
     )
