@@ -1,0 +1,94 @@
+name: Run tests
+
+# триггер запуска
+on:
+  workflow_dispatch:
+    inputs:
+      api_version:
+        description: "Backend version tag (matches @pytest.mark.api_version(..))"
+        required: true
+        type: choice # выпадающий список
+        options:
+          - with_database
+          - with_fraud_check
+      suite: # какой набор тестов запускать
+        description: "Which suite to run"
+        required: true
+        type: choice
+        options:
+          - api
+          - ui
+          - api+ui
+      markers:
+        description: "Additional pytest markers"
+        required: false
+        default: ""
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          # если requirements.txt поменялся, то ключ новый, кеш не используется
+          # если requirements.txt НЕ поменялся, то ключ старый, кеш используется
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          playwright install --with-deps
+          
+      - name: Start services
+        run: |
+          docker compose -f infra/docker-compose/docker-compose.yaml up -d
+          for i in {1..60}; do
+            if curl -sf http://localhost:4111/actuator/health >/dev/null; then
+              echo "Backend is UP"
+              break
+            fi
+          sleep 2
+          done 
+          curl -sf http://localhost:4111/actuator/health
+
+      - name: Run pytest
+        env:
+          UI_BASE_URL: http://localhost:3000
+          DB_HOST: localhost
+        run: |
+          set -eux
+          
+          API_VERSION_INPUT="${{ input.api_version }}"
+          SUITE_INPUT="${{ input.suite }}"
+          MARKERS="${{ input.markers }}"
+          
+          M_OPT=""
+          
+          if [ -n "$MARKERS" ]; then
+            M_OPT="-m $MARKERS"
+          fi
+          
+          if [ "$SUITE_INPUT" = "api" ]; then
+            pytest -m api --api-version "$API_VERSION_INPUT" $M_OPT -q
+          elif [ "$SUITE_INPUT" = "ui" ]; then
+            pytest -m ui $M_OPT -q
+          else
+            pytest -m api --api-version "$API_VERSION_INPUT" $M_OPT -q
+            pytest -m ui $M_OPT -q
+          fi
+
+      - name: Shutdown
+        if: always()
+        run: docker compose -f infra/docker-compose/docker-compose.yaml down
