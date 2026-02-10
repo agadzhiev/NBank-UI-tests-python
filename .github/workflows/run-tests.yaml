@@ -11,7 +11,8 @@ on:
         options:
           - with_database
           - with_fraud_check
-      suite: # какой набор тестов запускать
+      # какой набор тестов запускать
+      suite:
         description: "Which suite to run"
         required: true
         type: choice
