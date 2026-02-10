@@ -70,9 +70,9 @@ jobs:
         run: |
           set -eux
           
-          API_VERSION_INPUT="${{ input.api_version }}"
-          SUITE_INPUT="${{ input.suite }}"
-          MARKERS="${{ input.markers }}"
+          API_VERSION_INPUT="${{ inputs.api_version }}"
+          SUITE_INPUT="${{ inputs.suite }}"
+          MARKERS="${{ inputs.markers }}"
           
           M_OPT=""
           
