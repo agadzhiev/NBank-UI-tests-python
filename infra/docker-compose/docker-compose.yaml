@@ -34,8 +34,8 @@ services:
 
 #  сервис бекенда
   backend:
-#    образ на котором поднимается контейнер
-    image: nobugsme/nbank:with_database_with_fix
+#    образ на котором поднимается контейнер (NBANK_BACKEND_IMAGE из workflow или окружения)
+    image: ${NBANK_BACKEND_IMAGE:-nobugsme/nbank:with_database_with_fix}
 #    переменные окружения для подключения к базе данных из бекенда на спринг буте
     environment:
 #      УРЛ подключения к бд

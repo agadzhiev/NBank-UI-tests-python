@@ -22,6 +22,11 @@ on:
         description: "Additional pytest markers"
         required: false
         default: ""
+      backend_tag:
+        description: "Docker image tag for backend (e.g. with_database_with_fix, with_fraud_check)"
+        required: true
+        type: string
+        default: ""
   push:
     branches: [main, master, tests-in-pipeline]
 
@@ -53,7 +58,10 @@ jobs:
           playwright install --with-deps
           
       - name: Start services
+        env:
+          BACKEND_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.backend_tag || 'with_database_with_fix' }}
         run: |
+          export NBANK_BACKEND_IMAGE="nobugsme/nbank:${BACKEND_TAG}"
           docker compose -f infra/docker-compose/docker-compose.yaml up -d
           for i in {1..60}; do
             if curl -sf http://localhost:4111/actuator/health >/dev/null; then
