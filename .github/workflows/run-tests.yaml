@@ -1,17 +1,15 @@
 name: Run tests
 
-# триггер запуска
 on:
   workflow_dispatch:
     inputs:
       api_version:
         description: "Backend version tag (matches @pytest.mark.api_version(..))"
         required: true
-        type: choice # выпадающий список
+        type: choice
         options:
           - with_database
           - with_fraud_check
-      # какой набор тестов запускать
       suite:
         description: "Which suite to run"
         required: true
@@ -24,6 +22,8 @@ on:
         description: "Additional pytest markers"
         required: false
         default: ""
+  push:
+    branches: [main, master]
 
 jobs:
   run:
@@ -68,12 +68,16 @@ jobs:
         env:
           UI_BASE_URL: http://localhost:3000
           DB_HOST: localhost
+          # при push inputs нет — подставляем значения по умолчанию
+          API_VERSION_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.api_version || 'with_database' }}
+          SUITE_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.suite || 'api' }}
+          MARKERS_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.markers || '' }}
         run: |
           set -eux
           
-          API_VERSION_INPUT="${{ inputs.api_version }}"
-          SUITE_INPUT="${{ inputs.suite }}"
-          MARKERS="${{ inputs.markers }}"
+          API_VERSION_INPUT="${API_VERSION_INPUT:-with_database}"
+          SUITE_INPUT="${SUITE_INPUT:-api}"
+          MARKERS="${MARKERS_INPUT:-}"
           
           M_OPT=""
           
