@@ -18,3 +18,11 @@ class RandomData:
         password = upper + lower + digits + special
         random.shuffle(password)
         return ''.join(password)
+
+    @staticmethod
+    def get_amount(min_value: float = 0.01, max_value: float = 9999.9, precision: int = 2) -> float:
+        return round(random.uniform(min_value, max_value), precision)
+
+    @staticmethod
+    def get_full_name() -> str:
+        return f"{faker.first_name()} {faker.last_name()}"

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+
+from decimal import Decimal
 from typing import Optional
 
 from src.main.api.database.db_client import Condition, DBRequest, RequestType
@@ -47,3 +49,15 @@ class DataBaseSteps:
             .where(Condition.equal_to("account_number", account_number))
             .extract_optional_as(AccountDao)
         )
+
+    @staticmethod
+    def get_balance_by_account_number(account_number: str) -> Decimal:
+        account_dao =  (
+            DBRequest.builder()
+            .request_type(RequestType.SELECT)
+            .table("accounts")
+            .where(Condition.equal_to("account_number", account_number))
+            .extract_as(AccountDao)
+        )
+
+        return Decimal(account_dao.balance())
