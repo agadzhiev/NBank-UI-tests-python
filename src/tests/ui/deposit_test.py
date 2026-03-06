@@ -22,9 +22,8 @@ class TestDeposit:
             prepared.account.accountNumber
         )
 
-        LoginPage(page).auth_as_user(prepared.user)
-
-        DepositPage(page).open() \
+        LoginPage(page).auth_as_user(prepared.user) \
+            .go_to(DepositPage(page)) \
             .check_page_is_visible() \
             .deposit_to_account(prepared.account.id, deposit_amount)
 

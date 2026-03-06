@@ -14,3 +14,7 @@ class LoginPage(BasePage):
         self.password_input.fill(password)
         self.login_button.click()
         return self
+    
+    def go_to(self, page_obj):
+        page_obj.open()
+        return page_obj

@@ -11,7 +11,9 @@ T = TypeVar('T', bound=BaseModel)
 
 class ValidatedCrudRequester(HttpRequest):
     def __init__(self, request_spec, endpoint, response_spec):
-        super().__init__(request_spec, endpoint, response_spec)
+        self.request_spec = request_spec
+        self.endpoint = endpoint
+        self.response_spec = response_spec
         self.crud_requester = CrudRequester(
             request_spec=request_spec,
             endpoint=endpoint,

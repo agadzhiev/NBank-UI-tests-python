@@ -17,7 +17,7 @@ class ProfilePage(BasePage):
         return self.page.get_by_role("button", name="💾 Save Changes")
 
     def url(self):
-        return "/profile/edit"
+        return "/edit-profile"
 
     def check_page_is_visible(self):
         expect(self.page_title).to_be_visible()

@@ -31,16 +31,15 @@ class TestTransfer:
         user_dao = api_manager.database_steps.get_user_by_username(sender.user.username)
         recipient_name = user_dao.name
 
-        LoginPage(page).auth_as_user(sender.user)
-
-        TransferPage(page).open() \
+        LoginPage(page).auth_as_user(sender.user) \
+            .go_to(TransferPage(page)) \
             .check_page_is_visible() \
             .make_transfer(
-                    sender_account_id=sender.account.id,
-                    recipient_name=recipient_name,
-                    recipient_account_number=receiver.account.accountNumber,
-                    amount=transfer_amount,
-                )
+                sender_account_id=sender.account.id,
+                recipient_name=recipient_name,
+                recipient_account_number=receiver.account.accountNumber,
+                amount=transfer_amount,
+            )
 
         sender_after_balance = api_manager.database_steps.get_account_balance_by_account_number(
             sender.account.accountNumber

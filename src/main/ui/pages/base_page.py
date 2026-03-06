@@ -43,11 +43,12 @@ class BasePage(ABC):
         self.page.once("dialog", _handler)
         return self
     
-    def auth_as_user(self: T, user_request: CreateUserRequest) -> None:
+    def auth_as_user(self: T, user_request: CreateUserRequest) -> T:
         auth_token = RequestSpecs.auth_as_user(user_request.username, user_request.password).get("Authorization")
         self.page.set_viewport_size({"width": 1920, "height": 1080})
         self.page.goto(self.base_url)
         self.page.evaluate('token => localStorage.setItem("authToken", token)', auth_token)
+        return self
 
     def _generate_page_elements(self, elements: Locator, constructor: Callable[[Locator], T]) -> List[T]:
         count = elements.count()

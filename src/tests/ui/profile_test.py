@@ -19,12 +19,13 @@ class TestProfile:
         prepared = prepared_users[0]
         new_name = RandomData.get_full_name()
 
-        LoginPage(page).auth_as_user(prepared)
-
-        ProfilePage(page).open() \
+        LoginPage(page).auth_as_user(prepared) \
+            .go_to(ProfilePage(page)) \
             .check_page_is_visible() \
             .update_name(new_name)
 
-        user_dao = api_manager.database_steps.get_user_by_username(prepared.username)
-        assert user_dao.name == new_name
+
+        profile = api_manager.user_steps.get_profile(prepared)
+        assert profile.username == prepared.username
+        assert profile.name == new_name
         

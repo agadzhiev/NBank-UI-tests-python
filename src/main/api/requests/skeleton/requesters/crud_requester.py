@@ -11,6 +11,11 @@ T = TypeVar('T', bound=BaseModel)
 
 
 class CrudRequester(HttpRequest, CrudEndpointInterface):
+    def __init__(self, request_spec, endpoint, response_spec):
+        self.request_spec = request_spec
+        self.endpoint = endpoint
+        self.response_spec = response_spec
+
     @property
     def base_url(self) -> str:
         return f"{Config.get('server')}{Config.get('apiVersion')}"
