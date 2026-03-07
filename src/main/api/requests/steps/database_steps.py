@@ -60,4 +60,8 @@ class DataBaseSteps:
             .extract_as(AccountDao)
         )
 
-        return Decimal(account_dao.balance())
+        return Decimal(str(account_dao.balance))
+
+    @staticmethod
+    def get_account_balance_by_account_number(account_number: str) -> Decimal:
+        return DataBaseSteps.get_balance_by_account_number(account_number)
