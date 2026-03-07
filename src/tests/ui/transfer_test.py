@@ -1,4 +1,5 @@
 from decimal import Decimal
+import time
 import pytest
 from playwright.sync_api import Page
 
@@ -28,15 +29,21 @@ class TestTransfer:
             .check_page_is_visible() \
             .deposit_to_account(sender.account.id, 1000.0)
 
-        sender_before_balance = api_manager.database_steps.get_account_balance_by_account_number(
-            sender.account.accountNumber
-        )
+        sender_before_balance = None
+        for _ in range(10):
+            sender_before_balance = api_manager.database_steps.get_account_balance_by_account_number(
+                sender.account.accountNumber
+            )
+            if sender_before_balance == Decimal("1000.0"):
+                break
+            time.sleep(0.3)
+
         receiver_before_balance = api_manager.database_steps.get_account_balance_by_account_number(
             receiver.account.accountNumber
         )
 
-        user_dao = api_manager.database_steps.get_user_by_username(sender.user.username)
-        recipient_name = user_dao.name or "noname"
+        receiver_dao = api_manager.database_steps.get_user_by_username(receiver.user.username)
+        recipient_name = receiver_dao.name or "noname"
 
         LoginPage(page).go_to(TransferPage(page)) \
             .check_page_is_visible() \
@@ -47,13 +54,21 @@ class TestTransfer:
                 amount=transfer_amount,
             )
 
-        sender_after_balance = api_manager.database_steps.get_account_balance_by_account_number(
-            sender.account.accountNumber
-        )
-        receiver_after_balance = api_manager.database_steps.get_account_balance_by_account_number(
-            receiver.account.accountNumber
-        )
+        expected_sender_after = sender_before_balance - Decimal(str(transfer_amount))
+        expected_receiver_after = receiver_before_balance + Decimal(str(transfer_amount))
+        sender_after_balance = None
+        receiver_after_balance = None
+        for _ in range(10):
+            sender_after_balance = api_manager.database_steps.get_account_balance_by_account_number(
+                sender.account.accountNumber
+            )
+            receiver_after_balance = api_manager.database_steps.get_account_balance_by_account_number(
+                receiver.account.accountNumber
+            )
+            if sender_after_balance == expected_sender_after and receiver_after_balance == expected_receiver_after:
+                break
+            time.sleep(0.3)
 
-        assert sender_after_balance == sender_before_balance - Decimal(str(transfer_amount))
-        assert receiver_after_balance == receiver_before_balance + Decimal(str(transfer_amount))
+        assert sender_after_balance == expected_sender_after
+        assert receiver_after_balance == expected_receiver_after
         
