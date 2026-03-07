@@ -1,6 +1,5 @@
-import re
 import pytest
-from playwright.sync_api import Page, expect
+from playwright.sync_api import Page
 
 from src.main.api.models.create_user_request import CreateUserRequest
 from src.main.api.classes.api_manager import ApiManager
@@ -44,4 +43,4 @@ class TestCreateUser:
         .check_page_is_visible() \
         .create_user(new_user_request.username, new_user_request.password) \
         .check_alert_message_and_accept(BankAlert.USERNAME_MUST_BE_BETWEEN_3_AND_15_CHARACTERS) \
-        .check_user_is_visible(new_user_request.username)
+        .check_user_is_not_visible(new_user_request.username)

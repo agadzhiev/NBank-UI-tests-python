@@ -1,6 +1,5 @@
-from playwright.sync_api import expect
-
 from src.main.ui.pages.base_page import BasePage
+from src.main.ui.utils.ui_waits import UiWaits
 
 
 class ProfilePage(BasePage):
@@ -19,12 +18,24 @@ class ProfilePage(BasePage):
     def url(self):
         return "/edit-profile"
 
-    def check_page_is_visible(self):
-        expect(self.page_title).to_be_visible()
+    def wait_until_loaded(self):
+        UiWaits.visible(self.page_title)
+        UiWaits.visible(self.name_input)
+        UiWaits.enabled(self.save_changes_button)
         return self
 
+    def wait_profile_form_ready(self):
+        return self.wait_until_loaded()
+
+    def wait_profile_saved(self):
+        self.page.wait_for_load_state("networkidle")
+        return self.wait_profile_form_ready()
+
+    def check_page_is_visible(self):
+        return self.wait_until_loaded()
+
     def update_name(self, new_name: str):
+        self.wait_profile_form_ready()
         self.name_input.fill(new_name)
         self.save_changes_button.click()
-        self.page.wait_for_load_state("networkidle")
-        return self
+        return self.wait_profile_saved()

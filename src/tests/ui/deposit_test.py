@@ -1,13 +1,12 @@
 from decimal import Decimal
-import time
 import pytest
 from playwright.sync_api import Page
 
-from main.api.classes.api_manager import ApiManager
-from main.api.fixtures.prepare_data_fixtures import PreparedUserAccount
-from main.api.generators.random_data import RandomData
-from main.ui.pages.deposit_page import DepositPage
-from main.ui.pages.login_page import LoginPage
+from src.main.api.classes.api_manager import ApiManager
+from src.main.api.fixtures.prepare_data_fixtures import PreparedUserAccount
+from src.main.api.generators.random_data import RandomData
+from src.main.ui.pages.deposit_page import DepositPage
+from src.main.ui.pages.login_page import LoginPage
 
 
 @pytest.mark.ui
@@ -29,14 +28,9 @@ class TestDeposit:
             .deposit_to_account(prepared.account.id, deposit_amount)
 
         expected_after_balance = before_balance + Decimal(str(deposit_amount))
-        after_balance = None
-        for _ in range(10):
-            after_balance = api_manager.database_steps.get_account_balance_by_account_number(
-                prepared.account.accountNumber
-            )
-            if after_balance == expected_after_balance:
-                break
-            time.sleep(0.3)
+        after_balance = api_manager.database_steps.get_account_balance_by_account_number(
+            prepared.account.accountNumber
+        )
 
         assert after_balance == expected_after_balance
         

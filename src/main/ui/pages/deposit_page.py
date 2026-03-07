@@ -1,6 +1,6 @@
-from playwright.sync_api import expect
-
 from src.main.ui.pages.base_page import BasePage
+from src.main.ui.pages.user_dashboard import UserDashboard
+from src.main.ui.utils.ui_waits import UiWaits
 
 
 class DepositPage(BasePage):
@@ -23,13 +23,27 @@ class DepositPage(BasePage):
     def url(self):
         return "/deposit"
 
-    def check_page_is_visible(self):
-        expect(self.page_title).to_be_visible()
+    def wait_until_loaded(self):
+        UiWaits.visible(self.page_title)
+        UiWaits.visible(self.account_selector)
+        UiWaits.visible(self.amount_input)
+        UiWaits.enabled(self.deposit_button)
         return self
 
+    def wait_form_ready(self):
+        return self.wait_until_loaded()
+
+    def wait_deposit_completed(self):
+        self.page.wait_for_load_state("networkidle")
+        UserDashboard(self.page).check_page_is_visible()
+        return self
+
+    def check_page_is_visible(self):
+        return self.wait_until_loaded()
+
     def deposit_to_account(self, account_id: int, amount: float):
+        self.wait_form_ready()
         self.account_selector.select_option(str(account_id))
         self.amount_input.fill(str(amount))
         self.deposit_button.click()
-        self.page.wait_for_load_state("networkidle")
-        return self
+        return self.wait_deposit_completed()

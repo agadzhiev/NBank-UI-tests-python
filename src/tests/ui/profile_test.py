@@ -1,12 +1,11 @@
 import pytest
-import time
-from playwright.sync_api import Page, expect
+from playwright.sync_api import Page
 
-from main.api.classes.api_manager import ApiManager
-from main.api.generators.random_data import RandomData
-from main.api.models.create_user_request import CreateUserRequest
-from main.ui.pages.login_page import LoginPage
-from main.ui.pages.profile_page import ProfilePage
+from src.main.api.classes.api_manager import ApiManager
+from src.main.api.generators.random_data import RandomData
+from src.main.api.models.create_user_request import CreateUserRequest
+from src.main.ui.pages.login_page import LoginPage
+from src.main.ui.pages.profile_page import ProfilePage
 
 
 @pytest.mark.ui
@@ -25,16 +24,11 @@ class TestProfile:
             .check_page_is_visible() \
             .update_name(new_name)
 
-        profile = None
-        for _ in range(10):
-            profile = api_manager.user_steps.get_profile(prepared)
-            if profile.name == new_name:
-                break
-            time.sleep(0.3)
+        profile = api_manager.user_steps.get_profile(prepared)
         assert profile.username == prepared.username
-        if profile.name != new_name:
+        if profile.name is None:
             pytest.xfail(
-                f"Profile name is not updated via API yet: expected '{new_name}', got '{profile.name}'"
+                "System bug: profile name is not always returned by API after UI update."
             )
         assert profile.name == new_name
         
