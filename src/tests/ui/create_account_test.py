@@ -5,6 +5,7 @@ from src.main.api.classes.api_manager import ApiManager
 from src.main.api.models.create_user_request import CreateUserRequest
 from src.main.ui.pages.user_dashboard import UserDashboard
 from src.main.ui.pages.bank_alert import BankAlert
+from src.main.api.models.comparison.dao_and_model_assertions import DaoAndModelAssertions
 
 
 @pytest.mark.ui
@@ -21,3 +22,8 @@ class TestCreateAccount:
         accounts = api_manager.user_steps.get_all_accounts(user_request)
         assert len(accounts) == 1
         assert accounts[0].balance == 0
+
+        created_account = accounts[0]
+        account_dao = api_manager.database_steps.get_account_by_account_number(created_account.accountNumber)
+        DaoAndModelAssertions.assert_that(created_account, account_dao).match()
+        
