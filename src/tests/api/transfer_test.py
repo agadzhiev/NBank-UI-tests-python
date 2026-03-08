@@ -1,13 +1,12 @@
-from decimal import Decimal
-
 import pytest
 
 from src.main.api.classes.api_manager import ApiManager
 from src.main.api.fixtures.prepare_data_fixtures import PreparedUserAccount
 from src.main.api.generators.random_data import RandomData
-from src.main.api.models.comparison.dao_and_model_assertions import DaoAndModelAssertions
-from src.main.api.models.create_account_response import CreateAccountResponse
 from src.main.api.models.transfer_request import TransferRequest
+from src.main.api.requests.skeleton.endpoint import Endpoint
+from src.main.api.requests.skeleton.requesters.crud_requester import CrudRequester
+from src.main.api.specs.request_specs import RequestSpecs
 
 
 @pytest.mark.api
@@ -15,20 +14,18 @@ from src.main.api.models.transfer_request import TransferRequest
 @pytest.mark.prepare_users(number=2)
 @pytest.mark.prepare_accounts(number=2, deposit=5000)
 class TestTransfer:
+    @pytest.mark.parametrize("transfer_amount", [RandomData.get_amount(min_value=0.01, max_value=4999.99)])
+    @pytest.mark.check_transfer_balance_change(
+        sender_account_source="prepared_user_accounts[0].account.accountNumber",
+        receiver_account_source="prepared_user_accounts[1].account.accountNumber",
+        amount_source="transfer_amount",
+    )
     def test_transfer_between_accounts(
         self,
-        api_manager: ApiManager,
         prepared_user_accounts: list[PreparedUserAccount],
+        transfer_amount: float,
     ):
         sender, receiver = prepared_user_accounts
-        transfer_amount = RandomData.get_amount(min_value=0.01, max_value=4999.99)
-
-        sender_before_balance = api_manager.database_steps.get_account_balance_by_account_number(
-            sender.account.accountNumber
-        )
-        receiver_before_balance = api_manager.database_steps.get_account_balance_by_account_number(
-            receiver.account.accountNumber
-        )
 
         transfer_request = TransferRequest(
             senderAccountId=sender.account.id,
@@ -36,21 +33,46 @@ class TestTransfer:
             amount=transfer_amount,
         )
 
-        api_manager.user_steps.transfer(sender.user, transfer_request)
+        transfer_response = CrudRequester(
+            RequestSpecs.auth_as_user(sender.user.username, sender.user.password),
+            Endpoint.TRANSFER,
+            lambda response: None,
+        ).post(transfer_request).json()
 
-        sender_after = api_manager.database_steps.get_account_by_account_number(sender.account.accountNumber)
-        receiver_after = api_manager.database_steps.get_account_by_account_number(receiver.account.accountNumber)
+        assert transfer_response["senderAccountId"] == sender.account.id
+        assert transfer_response["receiverAccountId"] == receiver.account.id
+        assert transfer_response["amount"] == transfer_amount
 
-        expected_sender = CreateAccountResponse(
-            id=sender.account.id,
-            accountNumber=sender.account.accountNumber,
-            balance=float(sender_before_balance - Decimal(str(transfer_amount))),
+    @pytest.mark.parametrize("transfer_amount", [6000.0])
+    @pytest.mark.check_transfer_balance_change(
+        sender_account_source="prepared_user_accounts[0].account.accountNumber",
+        receiver_account_source="prepared_user_accounts[1].account.accountNumber",
+        amount_source="transfer_amount",
+        should_change=False,
+    )
+    def test_user_cannot_transfer_more_than_available_balance(
+        self,
+        prepared_user_accounts: list[PreparedUserAccount],
+        transfer_amount: float,
+    ):
+        sender, receiver = prepared_user_accounts
+
+        response = CrudRequester(
+            RequestSpecs.auth_as_user(sender.user.username, sender.user.password),
+            Endpoint.TRANSFER,
+            lambda response: None,
+        ).post(
+            TransferRequest(
+                senderAccountId=sender.account.id,
+                receiverAccountId=receiver.account.id,
+                amount=transfer_amount,
+            )
         )
-        expected_receiver = CreateAccountResponse(
-            id=receiver.account.id,
-            accountNumber=receiver.account.accountNumber,
-            balance=float(receiver_before_balance + Decimal(str(transfer_amount))),
-        )
 
-        DaoAndModelAssertions.assert_that(expected_sender, sender_after).match()
-        DaoAndModelAssertions.assert_that(expected_receiver, receiver_after).match()
+        assert response.status_code == 400, (
+            f"Expected 400 for transfer with insufficient funds, got {response.status_code}. "
+            f"Response body: {response.text}"
+        )
+        assert "insufficient funds" in response.text.lower(), (
+            f"Expected insufficient funds error, got: {response.text}"
+        )
