@@ -9,6 +9,7 @@ from src.main.api.models.comparison.model_assertions import ModelAssertions
 from src.main.api.models.role import Role
 from src.main.ui.pages.admin_panel import AdminPanel
 from src.main.ui.pages.bank_alert import BankAlert
+from src.main.api.models.comparison.dao_and_model_assertions import DaoAndModelAssertions
 
 
 @pytest.mark.ui
@@ -19,7 +20,7 @@ class TestCreateUser:
     @pytest.mark.entity_will_be_created("new_user_request")
     @pytest.mark.check_all_users_change(delta=1, username_source="new_user_request.username")
     def test_admin_can_create_user(self, page: Page, api_manager: ApiManager, new_user_request: CreateUserRequest):     
-        admin_page = AdminPanel(page).open() \
+        AdminPanel(page).open() \
         .check_page_is_visible() \
         .create_user(new_user_request.username, new_user_request.password) \
         .check_alert_message_and_accept(BankAlert.USER_CREATED_SUCCESSFULLY) \
@@ -31,6 +32,10 @@ class TestCreateUser:
             if u.username == new_user_request.username
         )
         ModelAssertions(created_user, new_user_request).match()
+
+        user_dao = api_manager.database_steps.get_user_by_username(new_user_request.username)
+        DaoAndModelAssertions.assert_that(created_user, user_dao).match()
+
 
     @pytest.mark.admin_session
     @pytest.mark.parametrize(
@@ -44,3 +49,6 @@ class TestCreateUser:
         .create_user(new_user_request.username, new_user_request.password) \
         .check_alert_message_and_accept(BankAlert.USERNAME_MUST_BE_BETWEEN_3_AND_15_CHARACTERS) \
         .check_user_is_not_visible(new_user_request.username)
+
+        user_dao = api_manager.database_steps.find_user_by_username(new_user_request.username)
+        assert user_dao is None, f"User '{new_user_request.username}' should NOT exist in DB after invalid create, but was found: {user_dao}"
