@@ -4,7 +4,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Optional
 
-from src.main.api.database.db_client import Condition, DBRequest, RequestType
+from src.main.api.database.db_client import Condition, DBRequest, RequestType, db_conn
 from src.main.api.database.dao.user_dao import UserDao
 from src.main.api.database.dao.account_dao import AccountDao
 
@@ -65,3 +65,18 @@ class DataBaseSteps:
     @staticmethod
     def get_account_balance_by_account_number(account_number: str) -> Decimal:
         return DataBaseSteps.get_balance_by_account_number(account_number)
+
+    # Added a DB-based top-up function because the API POST /api/v1/accounts/deposit returns a 500 error.
+    @staticmethod
+    def increment_account_balance_by_account_number(account_number: str, amount: float) -> None:
+        with db_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    UPDATE accounts
+                    SET balance = balance + %s
+                    WHERE account_number = %s
+                    """,
+                    (float(amount), account_number),
+                )
+            conn.commit()

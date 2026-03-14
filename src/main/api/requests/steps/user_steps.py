@@ -14,6 +14,8 @@ from src.main.api.models.deposit_request import DepositRequest
 from src.main.api.models.deposit_response import DepositResponse
 from src.main.api.models.transfer_request import TransferRequest
 from src.main.api.models.transfer_response import TransferResponse
+from src.main.api.models.update_profile_request import UpdateProfileRequest
+from src.main.api.models.update_profile_response import UpdateProfileResponse
 from src.main.api.requests.skeleton.requesters.validated_crud_requester import ValidatedCrudRequester
 
 
@@ -72,6 +74,30 @@ class UserSteps(BaseSteps):
         transfer_response: TransferResponse = ValidatedCrudRequester(
             RequestSpecs.auth_as_user(user_request.username, user_request.password),
             Endpoint.TRANSFER_WITH_FRAUD_CHECK,
+            ResponseSpecs.request_returns_ok()
+        ).post(transfer_request)
+        return transfer_response
+
+    def update_profile(
+        self,
+        user_request: CreateUserRequest,
+        update_profile_request: UpdateProfileRequest,
+    ) -> UpdateProfileResponse:
+        update_profile_response: UpdateProfileResponse = ValidatedCrudRequester(
+            RequestSpecs.auth_as_user(user_request.username, user_request.password),
+            Endpoint.UPDATE_CUSTOMER_PROFILE,
+            ResponseSpecs.request_returns_ok()
+        ).post(update_profile_request)
+        return update_profile_response
+
+    def transfer(
+        self,
+        user_request: CreateUserRequest,
+        transfer_request: TransferRequest,
+    ) -> TransferResponse:
+        transfer_response: TransferResponse = ValidatedCrudRequester(
+            RequestSpecs.auth_as_user(user_request.username, user_request.password),
+            Endpoint.TRANSFER,
             ResponseSpecs.request_returns_ok()
         ).post(transfer_request)
         return transfer_response
