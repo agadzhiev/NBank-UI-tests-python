@@ -44,7 +44,7 @@ def _load_fraud_mock_config(request: pytest.FixtureRequest) -> Optional[FraudMoc
     return FraudMockConfig(port=port, endpoint=endpoint, response_body=body)
 
 
-@pytest.fixture(autouse=True, scope="function")
+@pytest.fixture(scope="function")
 def fraud_check_mock_server(request: pytest.FixtureRequest):
     """
     Marker-driven local HTTP mock for FraudCheck service.
