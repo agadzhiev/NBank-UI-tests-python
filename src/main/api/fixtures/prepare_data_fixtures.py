@@ -94,8 +94,10 @@ def prepared_user_accounts(
         user = prepared_users[i % len(prepared_users)]
         account = api_manager.user_steps.create_account(user)
         if deposit is not None:
-            api_manager.user_steps.deposit_to_account(user, account.id, float(deposit))
+            api_manager.database_steps.increment_account_balance_by_account_number(
+                account.accountNumber,
+                float(deposit),
+            )
         result.append(PreparedUserAccount(user=user, account=account))
 
     return result
-

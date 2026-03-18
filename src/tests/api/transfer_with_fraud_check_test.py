@@ -38,6 +38,12 @@ TRANSFER_APPROVED_EXPECTED = {
 @pytest.mark.prepare_users(number=2)
 @pytest.mark.prepare_accounts(number=2, deposit=5000)
 class TestTransferWithFraudCheck:
+    @pytest.mark.parametrize("transfer_amount", [round(random.uniform(0.1, 4999.9), 2)])
+    @pytest.mark.check_transfer_balance_change(
+        sender_account_source="prepared_user_accounts[0].account.accountNumber",
+        receiver_account_source="prepared_user_accounts[1].account.accountNumber",
+        amount_source="transfer_amount",
+    )
     @pytest.mark.fraud_check_mock(
         port=8080,
         endpoint=r"/.*",
@@ -54,7 +60,6 @@ class TestTransferWithFraudCheck:
             receiver = prepared_user_accounts[1]
 
         with allure.step("Transfer with fraud check"):
-            transfer_amount = round(random.uniform(0.1, 4999.9), 2)
             transfer_request = TransferRequest(
                 senderAccountId=sender.account.id,
                 receiverAccountId=receiver.account.id,
