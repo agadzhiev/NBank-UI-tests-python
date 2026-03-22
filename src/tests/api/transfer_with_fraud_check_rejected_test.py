@@ -10,26 +10,26 @@ from src.main.api.models.transfer_request import TransferRequest
 from src.main.api.models.transfer_response import TransferResponse
 
 
-FRAUD_APPROVED_MOCK = {
-    "status": "SUCCESS",
-    "decision": "APPROVED",
+FRAUD_REJECTED_MOCK = {
+    "status": "REJECTED",
+    "decision": "REJECTED",
     "riskScore": 0.2,
     "reason": "Low risk transaction",
     "requiresManualReview": False,
     "additionalVerificationRequired": False,
 }
 
-FRAUD_APPROVED_EXPECTED = {
-    "fraudRiskScore": FRAUD_APPROVED_MOCK["riskScore"],
-    "fraudReason": FRAUD_APPROVED_MOCK["reason"],
+FRAUD_REJECTED_EXPECTED = {
+    "fraudRiskScore": FRAUD_REJECTED_MOCK["riskScore"],
+    "fraudReason": FRAUD_REJECTED_MOCK["reason"],
     "requiresManualReview": False,
     "requiresVerification": False,
 }
 
-TRANSFER_APPROVED_EXPECTED = {
-    "status": "APPROVED",
-    "message": "Transfer approved and processed immediately",
-    **FRAUD_APPROVED_EXPECTED,
+TRANSFER_REJECTED_EXPECTED = {
+    "status": "REJECTED",
+    "message": "Transfer rejected",
+    **FRAUD_REJECTED_EXPECTED,
 }
 
 
@@ -37,19 +37,13 @@ TRANSFER_APPROVED_EXPECTED = {
 @pytest.mark.api_version("with_fraud_check")
 @pytest.mark.prepare_users(number=2)
 @pytest.mark.prepare_accounts(number=2, deposit=5000)
-class TestTransferWithFraudCheck:
-    @pytest.mark.parametrize("transfer_amount", [round(random.uniform(0.1, 4999.9), 2)])
-    @pytest.mark.check_transfer_balance_change(
-        sender_account_source="prepared_user_accounts[0].account.accountNumber",
-        receiver_account_source="prepared_user_accounts[1].account.accountNumber",
-        amount_source="transfer_amount",
-    )
+class TestTransferWithFraudCheckRejected:
     @pytest.mark.fraud_check_mock(
         port=8080,
         endpoint=r"/.*",
-        **FRAUD_APPROVED_MOCK,
+        **FRAUD_REJECTED_MOCK,
     )
-    def test_transfer_with_fraud_check(
+    def test_transfer_with_fraud_check_rejected(
         self,
         api_manager: ApiManager,
         prepared_user_accounts: list[PreparedUserAccount],
@@ -58,8 +52,15 @@ class TestTransferWithFraudCheck:
         with allure.step("Prepare sender/receiver accounts (2 accounts with deposit=5000)"):
             sender = prepared_user_accounts[0]
             receiver = prepared_user_accounts[1]
+            before_sender_balance = api_manager.database_steps.get_balance_by_account_number(
+                sender.account.accountNumber
+            )
+            before_receiver_balance = api_manager.database_steps.get_balance_by_account_number(
+                receiver.account.accountNumber
+            )
 
         with allure.step("Transfer with fraud check"):
+            transfer_amount = round(random.uniform(0.1, 4999.9), 2)
             transfer_request = TransferRequest(
                 senderAccountId=sender.account.id,
                 receiverAccountId=receiver.account.id,
@@ -75,6 +76,17 @@ class TestTransferWithFraudCheck:
                 amount=transfer_amount,
                 senderAccountId=sender.account.id,
                 receiverAccountId=receiver.account.id,
-                **TRANSFER_APPROVED_EXPECTED,
+                **TRANSFER_REJECTED_EXPECTED,
             )
             ModelAssertions(expected, transfer_response).match()
+
+        with allure.step("Validate balances were not changed"):
+            after_sender_balance = api_manager.database_steps.get_balance_by_account_number(
+                sender.account.accountNumber
+            )
+            after_receiver_balance = api_manager.database_steps.get_balance_by_account_number(
+                receiver.account.accountNumber
+            )
+
+            assert after_sender_balance == before_sender_balance
+            assert after_receiver_balance == before_receiver_balance
