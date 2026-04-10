@@ -31,6 +31,10 @@ on:
     branches: [main, master, tests-in-pipeline]
     paths:
       - 'src/**'
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'src/**'
 
 jobs:
   run:
@@ -52,17 +56,17 @@ jobs:
           # если requirements.txt НЕ поменялся, то ключ старый, кеш используется
           restore-keys: |
             ${{ runner.os }}-pip-
-            
+
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           playwright install --with-deps
-      
+
       - name: Run pylint
         run: |
-          pylint src
-          
+          pylint src --fail-under=5.0
+
       - name: Start services
         env:
           BACKEND_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.backend_tag || 'with_database_with_fix' }}
@@ -75,7 +79,7 @@ jobs:
               break
             fi
           sleep 2
-          done 
+          done
           curl -sf http://localhost:4111/actuator/health
 
       - name: Run pytest
@@ -88,17 +92,17 @@ jobs:
           MARKERS_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.markers || '' }}
         run: |
           set -eux
-          
+
           API_VERSION_INPUT="${API_VERSION_INPUT:-with_database}"
           SUITE_INPUT="${SUITE_INPUT:-api}"
           MARKERS="${MARKERS_INPUT:-}"
-          
+
           M_OPT=""
-          
+
           if [ -n "$MARKERS" ]; then
             M_OPT="-m $MARKERS"
           fi
-          
+
           if [ "$SUITE_INPUT" = "api" ]; then
             pytest -m api --api-version "$API_VERSION_INPUT" $M_OPT -q
           elif [ "$SUITE_INPUT" = "ui" ]; then
@@ -107,7 +111,18 @@ jobs:
             pytest -m api --api-version "$API_VERSION_INPUT" $M_OPT -q
             pytest -m ui $M_OPT -q
           fi
-      
+
+      - name: Shutdown
+        if: always()
+        run: docker compose -f infra/docker-compose/docker-compose.yaml down
+
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: run
+
+    steps:
+      - uses: actions/checkout@v4
+
       - name: Build and push docker image
         run: |
           IMAGE_NAME="nbank-tests"
@@ -118,7 +133,3 @@ jobs:
           docker push "${{ secrets.DOCKER_USERNAME }}/$IMAGE_NAME:$TAG"
           echo "Image pushed. To pull it run:"
           echo "docker pull ${{ secrets.DOCKER_USERNAME }}/$IMAGE_NAME:$TAG"
-
-      - name: Shutdown
-        if: always()
-        run: docker compose -f infra/docker-compose/docker-compose.yaml down
