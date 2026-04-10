@@ -29,6 +29,8 @@ on:
         default: ""
   push:
     branches: [main, master, tests-in-pipeline]
+    paths:
+      - 'src/**'
 
 jobs:
   run:
@@ -56,6 +58,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           playwright install --with-deps
+      
+      - name: Run pylint
+        run: |
+          pylint src
           
       - name: Start services
         env:
@@ -101,6 +107,17 @@ jobs:
             pytest -m api --api-version "$API_VERSION_INPUT" $M_OPT -q
             pytest -m ui $M_OPT -q
           fi
+      
+      - name: Build and push docker image
+        run: |
+          IMAGE_NAME="nbank-tests"
+          TAG=${{ github.sha }}
+          docker build -t "$IMAGE_NAME" .
+          echo "${{ secrets.DOCKER_TOKEN }}" | docker login -u agadzhiev --password-stdin
+          docker tag "$IMAGE_NAME" "${{ secrets.DOCKER_USERNAME }}/$IMAGE_NAME:$TAG"
+          docker push "${{ secrets.DOCKER_USERNAME }}/$IMAGE_NAME:$TAG"
+          echo "Image pushed. To pull it run:"
+          echo "docker pull ${{ secrets.DOCKER_USERNAME }}/$IMAGE_NAME:$TAG"
 
       - name: Shutdown
         if: always()
