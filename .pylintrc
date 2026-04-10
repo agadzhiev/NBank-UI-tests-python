@@ -1,0 +1,23 @@
+[MASTER]
+jobs=1
+
+[MESSAGES CONTROL]
+disable=
+    C0114,  # missing-module-docstring — не обязательно для тестового проекта
+    C0115,  # missing-class-docstring — не обязательно для тестового проекта
+    C0116,  # missing-function-docstring — не обязательно для тестового проекта
+    E0401,  # import-error — пакеты устанавливаются через pip перед запуском pylint
+    R0903,  # too-few-public-methods — тестовые классы часто содержат 1 метод
+    R0801,  # duplicate-code — в тестах часто повторяющийся setup-код
+    W0613,  # unused-argument — pytest-фикстуры часто передаются без явного использования
+    C0303,  # trailing-whitespace — исправляется автоформатером
+    C0304,  # missing-final-newline — исправляется автоформатером
+    W0611,  # unused-import — фикстуры импортируются для side-effect
+    W0401,  # wildcard-import — conftest использует * импорты для фикстур
+
+[FORMAT]
+max-line-length=120
+
+[DESIGN]
+max-args=10
+max-attributes=10
