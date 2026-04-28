@@ -1,0 +1,84 @@
+{
+  "total": 11,
+  "covered": 0,
+  "percentage": 0.0,
+  "endpoints": [
+    {
+      "path": "/api/v1/customer/profile",
+      "method": "GET",
+      "summary": "Get customer profile",
+      "covered": false,
+      "statuses": []
+    },
+    {
+      "path": "/api/v1/customer/profile",
+      "method": "PUT",
+      "summary": "Update customer profile",
+      "covered": false,
+      "statuses": []
+    },
+    {
+      "path": "/api/v1/auth/login",
+      "method": "POST",
+      "summary": "User login",
+      "covered": false,
+      "statuses": []
+    },
+    {
+      "path": "/api/v1/admin/users",
+      "method": "GET",
+      "summary": "Get all users",
+      "covered": false,
+      "statuses": []
+    },
+    {
+      "path": "/api/v1/admin/users",
+      "method": "POST",
+      "summary": "Create a new user",
+      "covered": false,
+      "statuses": []
+    },
+    {
+      "path": "/api/v1/accounts",
+      "method": "POST",
+      "summary": "Create an account",
+      "covered": false,
+      "statuses": []
+    },
+    {
+      "path": "/api/v1/accounts/transfer",
+      "method": "POST",
+      "summary": "Transfer money",
+      "covered": false,
+      "statuses": []
+    },
+    {
+      "path": "/api/v1/accounts/deposit",
+      "method": "POST",
+      "summary": "Deposit money",
+      "covered": false,
+      "statuses": []
+    },
+    {
+      "path": "/api/v1/customer/accounts",
+      "method": "GET",
+      "summary": "Get customer accounts",
+      "covered": false,
+      "statuses": []
+    },
+    {
+      "path": "/api/v1/accounts/{accountId}/transactions",
+      "method": "GET",
+      "summary": "Get account transactions",
+      "covered": false,
+      "statuses": []
+    },
+    {
+      "path": "/api/v1/admin/users/{id}",
+      "method": "DELETE",
+      "summary": "Delete a user by ID",
+      "covered": false,
+      "statuses": []
+    }
+  ]
+}
