@@ -1,2 +1,10 @@
 .DS_Store
 .venv/
+__pycache__/
+*.pyc
+allure-results/
+allure-report/
+swagger-coverage-output/
+swagger-coverage-report/
+swagger-spec.json
+pages/

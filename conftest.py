@@ -1,7 +1,12 @@
+import json
 import os
 import random
+import re
 import time
+import uuid
+from urllib.parse import urlparse
 
+import requests as requests_lib
 import pytest
 
 from src.main.api.classes.session_storage import SessionStorage
@@ -13,6 +18,51 @@ from src.main.api.fixtures.prepare_data_fixtures import *
 from src.main.api.fixtures.setup_hook import *
 from src.main.api.fixtures.user_fixtures import *
 from src.main.api.utils.normalize_browsers import norm_browser_name
+
+
+# --------------- swagger-coverage request listener ---------------
+_SWAGGER_COV_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "swagger-coverage-output")
+
+_PATH_TEMPLATES = [
+    (re.compile(r"(/api/v1/admin/users)/\d+"), r"\1/{id}"),
+    (re.compile(r"(/api/v1/accounts)/\d+"), r"\1/{id}"),
+]
+
+
+def _templatize_path(raw_path: str) -> str:
+    for pattern, replacement in _PATH_TEMPLATES:
+        result = pattern.sub(replacement, raw_path)
+        if result != raw_path:
+            return result
+    return raw_path
+
+
+_original_session_request = requests_lib.Session.request
+
+
+def _intercepted_request(self, method, url, **kwargs):
+    response = _original_session_request(self, method, url, **kwargs)
+    try:
+        parsed = urlparse(url)
+        host = parsed.hostname or ""
+        if host in ("localhost", "127.0.0.1", "0.0.0.0"):
+            path = _templatize_path(parsed.path)
+            record = {
+                "method": method.upper(),
+                "path": path,
+                "status_code": response.status_code,
+                "query": parsed.query or None,
+            }
+            os.makedirs(_SWAGGER_COV_DIR, exist_ok=True)
+            with open(os.path.join(_SWAGGER_COV_DIR, f"{uuid.uuid4()}.json"), "w") as f:
+                json.dump(record, f)
+    except Exception:
+        pass
+    return response
+
+
+requests_lib.Session.request = _intercepted_request
+# -----------------------------------------------------------------
 
 
 
