@@ -1,0 +1,54 @@
+{{- if .Values.selenoid.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: selenoid
+  labels:
+    app: selenoid
+spec:
+  replicas: {{ .Values.selenoid.replicas }}
+  selector:
+    matchLabels:
+      app: selenoid
+  template:
+    metadata:
+      labels:
+        app: selenoid
+    spec:
+      containers:
+        - name: selenoid
+          image: {{ .Values.selenoid.image }}
+          ports:
+            - containerPort: {{ .Values.selenoid.port }}
+          volumeMounts:
+            - name: selenoid-config
+              mountPath: /etc/selenoid
+            - name: docker-sock
+              mountPath: /var/run/docker.sock
+          args:
+            - "-conf"
+            - "/etc/selenoid/browsers.json"
+            - "-limit"
+            - "5"
+            - "-video-output-dir"
+            - "/opt/selenoid/video"
+          readinessProbe:
+            httpGet:
+              path: /status
+              port: {{ .Values.selenoid.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /status
+              port: {{ .Values.selenoid.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: selenoid-config
+          configMap:
+            name: selenoid-config
+        - name: docker-sock
+          hostPath:
+            path: /var/run/docker.sock
+{{- end }}
