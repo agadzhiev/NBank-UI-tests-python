@@ -1,0 +1,17 @@
+{{- if .Values.selenoid.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: selenoid-ui
+  labels:
+    app: selenoid-ui
+spec:
+  type: NodePort
+  ports:
+    - port: {{ .Values.selenoid.selenoidUi.port }}
+      targetPort: {{ .Values.selenoid.selenoidUi.port }}
+      nodePort: {{ .Values.selenoid.selenoidUi.nodePort }}
+      protocol: TCP
+  selector:
+    app: selenoid-ui
+{{- end }}

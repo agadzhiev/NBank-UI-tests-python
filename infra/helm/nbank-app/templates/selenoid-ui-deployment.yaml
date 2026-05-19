@@ -1,0 +1,26 @@
+{{- if .Values.selenoid.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: selenoid-ui
+  labels:
+    app: selenoid-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: selenoid-ui
+  template:
+    metadata:
+      labels:
+        app: selenoid-ui
+    spec:
+      containers:
+        - name: selenoid-ui
+          image: {{ .Values.selenoid.selenoidUi.image }}
+          ports:
+            - containerPort: {{ .Values.selenoid.selenoidUi.port }}
+          args:
+            - "--selenoid-uri"
+            - "http://selenoid:{{ .Values.selenoid.port }}"
+{{- end }}

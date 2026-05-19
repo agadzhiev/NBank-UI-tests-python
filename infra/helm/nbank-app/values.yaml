@@ -1,0 +1,45 @@
+postgres:
+  image: postgres:15-alpine
+  replicas: 1
+  port: 5432
+  nodePort: 30432
+  env:
+    POSTGRES_DB: nbank
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+  storage:
+    size: 1Gi
+
+backend:
+  image: nobugsme/nbank:with_database_with_fix
+  replicas: 2
+  port: 4111
+  nodePort: 30411
+  env:
+    SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nbank
+    SPRING_DATASOURCE_USERNAME: postgres
+    SPRING_DATASOURCE_PASSWORD: postgres
+
+frontend:
+  image: nobugsme/nbank-ui:with_nginx
+  replicas: 2
+  port: 80
+  nodePort: 30000
+
+selenoid:
+  enabled: true
+  image: aerokube/selenoid:1.11.3
+  replicas: 1
+  port: 4444
+  nodePort: 30444
+  browsers:
+    chrome:
+      image: selenoid/vnc_chrome:131.0
+      port: 4444
+    firefox:
+      image: selenoid/vnc_firefox:133.0
+      port: 4444
+  selenoidUi:
+    image: aerokube/selenoid-ui:1.10.11
+    port: 8080
+    nodePort: 30808

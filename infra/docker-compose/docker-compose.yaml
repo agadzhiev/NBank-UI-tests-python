@@ -35,7 +35,7 @@ services:
 #  сервис бекенда
   backend:
 #    образ на котором поднимается контейнер (NBANK_BACKEND_IMAGE из workflow или окружения)
-    image: ${NBANK_BACKEND_IMAGE:-nobugsme/nbank:with_fraud_check}
+    image: ${NBANK_BACKEND_IMAGE:-nobugsme/nbank:with_database_with_fix}
 #    переменные окружения для подключения к базе данных из бекенда на спринг буте
     environment:
 #      УРЛ подключения к бд
@@ -44,8 +44,6 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
 #      пароль к базе
       SPRING_DATASOURCE_PASSWORD: postgres
-#      адрес сервиса антифрода; мок поднимается pytest-фикстурой на хосте
-      FRAUD_DETECTION_SERVICE_URL: http://host.docker.internal:8080
 #      открываем порт бекенда наружу вне контейнера
     ports:
       - "4111:4111"

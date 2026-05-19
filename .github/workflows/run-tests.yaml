@@ -28,10 +28,22 @@ on:
         type: string
         default: ""
   push:
-    branches: [main, master, tests-in-pipeline]
+    branches: [main, master, tests-in-pipeline, docker]
+    paths:
+      - 'src/**'
+      - '.github/workflows/**'
+      - 'scripts/**'
+      - 'conftest.py'
+      - 'requirements.txt'
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: write
+  pages: write
 
 jobs:
-  run:
+  test:
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -46,17 +58,18 @@ jobs:
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-          # если requirements.txt поменялся, то ключ новый, кеш не используется
-          # если requirements.txt НЕ поменялся, то ключ старый, кеш используется
           restore-keys: |
             ${{ runner.os }}-pip-
-            
+
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           playwright install --with-deps
-          
+
+      - name: Run pylint
+        run: pylint src --fail-under=5.0
+
       - name: Start services
         env:
           BACKEND_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.backend_tag || 'with_database_with_fix' }}
@@ -68,31 +81,42 @@ jobs:
               echo "Backend is UP"
               break
             fi
-          sleep 2
-          done 
+            sleep 2
+          done
           curl -sf http://localhost:4111/actuator/health
+
+      - name: Download OpenAPI spec
+        run: |
+          mkdir -p swagger-coverage-output
+          for endpoint in /v3/api-docs /v2/api-docs /swagger-resources; do
+            if curl -sf "http://localhost:4111${endpoint}" -o swagger-spec.json; then
+              echo "Downloaded spec from ${endpoint}"
+              break
+            fi
+          done
+          if [ ! -f swagger-spec.json ]; then
+            echo "OpenAPI spec not available, will use fallback"
+          fi
 
       - name: Run pytest
         env:
           UI_BASE_URL: http://localhost:3000
           DB_HOST: localhost
-          # при push inputs нет — подставляем значения по умолчанию
           API_VERSION_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.api_version || 'with_database' }}
           SUITE_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.suite || 'api' }}
           MARKERS_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.markers || '' }}
         run: |
           set -eux
-          
+
           API_VERSION_INPUT="${API_VERSION_INPUT:-with_database}"
           SUITE_INPUT="${SUITE_INPUT:-api}"
           MARKERS="${MARKERS_INPUT:-}"
-          
+
           M_OPT=""
-          
           if [ -n "$MARKERS" ]; then
             M_OPT="-m $MARKERS"
           fi
-          
+
           if [ "$SUITE_INPUT" = "api" ]; then
             pytest -m api --api-version "$API_VERSION_INPUT" $M_OPT -q
           elif [ "$SUITE_INPUT" = "ui" ]; then
@@ -102,6 +126,87 @@ jobs:
             pytest -m ui $M_OPT -q
           fi
 
+      - name: Generate swagger-coverage report
+        if: always()
+        run: python scripts/generate_swagger_coverage.py --input-dir swagger-coverage-output --output-dir swagger-coverage-report
+
+      - name: Generate allure report
+        if: always()
+        run: |
+          wget -q https://github.com/allure-framework/allure2/releases/download/2.27.0/allure-2.27.0.tgz
+          tar -xzf allure-2.27.0.tgz
+          ./allure-2.27.0/bin/allure generate allure-results -o allure-report --clean
+
+      - name: Quality gate - API coverage
+        if: always()
+        run: bash scripts/check_coverage.sh swagger-coverage-report/coverage.json 50
+
+      - name: Prepare reports for Pages
+        if: always()
+        run: |
+          RUN_NUMBER=${{ github.run_number }}
+          mkdir -p pages/test-report/${RUN_NUMBER}/allure-report
+          mkdir -p pages/test-report/${RUN_NUMBER}/swagger-coverage
+          if [ -d allure-report ]; then
+            cp -r allure-report/* pages/test-report/${RUN_NUMBER}/allure-report/
+          fi
+          if [ -d swagger-coverage-report ]; then
+            cp -r swagger-coverage-report/* pages/test-report/${RUN_NUMBER}/swagger-coverage/
+          fi
+
+          cat > pages/index.html << 'INDEXEOF'
+          <!DOCTYPE html>
+          <html><head><meta charset="UTF-8"><title>Test Reports</title>
+          <style>body{font-family:sans-serif;padding:24px;background:#f5f5f5}
+          h1{margin-bottom:16px}a{color:#1976d2;text-decoration:none}
+          a:hover{text-decoration:underline}.card{background:#fff;border-radius:8px;
+          padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.1)}</style>
+          </head><body><h1>NBank Test Reports</h1>
+          <div class="card"><p>Browse to <code>/test-report/{run_number}/allure-report/</code> or <code>/test-report/{run_number}/swagger-coverage/</code></p></div>
+          </body></html>
+          INDEXEOF
+
+      - name: Deploy to GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./pages
+          keep_files: true
+
+      - name: Print report links
+        if: always()
+        run: |
+          PAGES_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+          RUN_NUMBER=${{ github.run_number }}
+          echo ""
+          echo "==========================================="
+          echo "  Allure Report:"
+          echo "  ${PAGES_URL}/test-report/${RUN_NUMBER}/allure-report/"
+          echo ""
+          echo "  Swagger Coverage:"
+          echo "  ${PAGES_URL}/test-report/${RUN_NUMBER}/swagger-coverage/"
+          echo "==========================================="
+          echo ""
+
       - name: Shutdown
         if: always()
         run: docker compose -f infra/docker-compose/docker-compose.yaml down
+
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and push docker image
+        run: |
+          IMAGE_NAME="nbank-tests"
+          TAG=${{ github.sha }}
+          docker build -t "$IMAGE_NAME" .
+          echo "${{ secrets.DOCKER_TOKEN }}" | docker login -u agadzhiev --password-stdin
+          docker tag "$IMAGE_NAME" "${{ secrets.DOCKER_USERNAME }}/$IMAGE_NAME:$TAG"
+          docker push "${{ secrets.DOCKER_USERNAME }}/$IMAGE_NAME:$TAG"
+          echo "Image pushed. To pull it run:"
+          echo "docker pull ${{ secrets.DOCKER_USERNAME }}/$IMAGE_NAME:$TAG"
